@@ -204,10 +204,15 @@
                             shows[i].find('.epidled').hide();
 
                             var airDate = new Date(show.airDate);
-                            var dTimeMin = (airDate - curTime) / 1000 / 60;
+                            var availDate = new Date(airDate);
+                            availDate.setTime(availDate.getTime() + 60*60*1000);
+
+                            var dTimeMin = (availDate - curTime) / 1000 / 60;
 
                             if (dTimeMin > 0) {
-                                if (dTimeMin > 60) {
+                                if (Math.abs(dTimeMin) > 24*60) {
+                                    shows[i].find('.epitime').text(Math.ceil(dTimeMin/24/60) + 'd').show();
+                                } else if (Math.abs(dTimeMin) > 60) {
                                     shows[i].find('.epitime').text(Math.ceil(dTimeMin/60) + 'h').show();
                                 } else {
                                     shows[i].find('.epitime').text(Math.ceil(dTimeMin) + 'm').show();
