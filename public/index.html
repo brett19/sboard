@@ -1,0 +1,381 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Dashboard</title>
+    <style type="text/css">
+        html {
+            height: 100%;
+        }
+        body {
+            background-color: #000;
+            font-size: 38px;
+            font-weight: bold;
+            color: #ccc;
+            height: 100%;
+            margin: 0px;
+            padding: 0px;
+            overflow: hidden;
+            font-family: Verdana, Geneva, sans-serif;
+        }
+        #wrapper {
+            height: 100%;
+            padding: 3px;
+        }
+        .blocks {
+            width: 100%;
+            height: 100%;
+        }
+        .blocks td {
+            text-align: center;
+            background-color: #333;
+            width: 20%;
+            height: 25%;
+            padding: 10px;
+            border: 5px solid #000;
+            position: relative;
+            z-index: 0;
+        }
+        .blocks td .bggraph {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .blocks td .title {
+            position: absolute;
+            text-align: center;
+            left: 0px;
+            top: 0px;
+            width: 100%;
+            font-weight: bold;
+            font-size: 16px;
+            padding: 5px;
+            color: #888;
+        }
+        .blocks td .data {
+            font-size: 52px;
+        }
+        .blocks td .data .subdata {
+            font-size: 16px;
+            color: #777;
+        }
+        .blocks td .outof {
+            font-size: 13px;
+            color: #555;
+        }
+        .blocks .showlist {
+            width: 40%;
+            background-color: #000;
+            padding: 0px;
+            vertical-align: top;
+            border: 0px;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .shows {
+            width: 100%;
+            height: 100%;
+        }
+        .shows td {
+            font-size: 12px;
+            text-align: left;
+            width: auto;
+            border: 5px solid #000;
+        }
+
+        .shows .showname {
+            font-size: 26px;
+        }
+        .shows .epiname {
+            font-size: 14px;
+        }
+        .shows .epidled {
+            position: absolute;
+            top: 7px;
+            right: 7px;
+            width: 32px;
+            height: 32px;
+            background-image: url(check.png);
+        }
+        .shows .epitime {
+            position: absolute;
+            top: 12px;
+            right: 14px;
+            font-size: 18px;
+            text-align: right;
+        }
+        .shows td {
+            height: 8% !important;
+        }
+        .shows tr.mini td {
+            height: 3% !important;
+        }
+        .shows tr.mini .showname {
+            font-size: 18px;
+        }
+        .shows tr.mini .epiname {
+            display: none;
+        }
+
+        .curtime {
+            font-size: 100px !important;
+        }
+        .curdate {
+            font-size: 18px !important;
+            color: #888;
+        }
+
+    </style>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+        google.load("visualization", "1", {packages:["corechart"]});
+
+        function minLen(num, len) {
+            num = '' + num;
+            while (num.length < len) {
+                num = '0' + num;
+            }
+            return num;
+        }
+
+        var pingChartOpts = {
+            backgroundColor: '#333',
+            vAxis: {
+                textPosition: 'in',
+                textStyle: { color: '#444' },
+                gridlines: { color: '#333' },
+                minValue: 0,
+                logScale: true
+            },
+            hAxis: {
+                textPosition: 'none',
+                gridlines: { count: 0 }
+            },
+            enableInteractivity: false,
+            series: [{color: '#2d2d2d', visibleInLegend: false, lineWidth: 0}],
+            chartArea: {left:0,top:0,width:"100%",height:"100%"}
+        };
+
+        var pingChart = null;
+        var downChart = null;
+        var upChart = null;
+        var shows = [];
+
+        $(document).ready(function() {
+            google.setOnLoadCallback(begin);
+        });
+
+        function setTimeInfo(el, val) {
+            el.find('.value').text(Math.round(val));
+            el.find('.unit').text('ms');
+        }
+        function setBandInfo(el, val) {
+            if (val < 1024*1024) {
+                el.find('.value').text(Math.round(val/1024));
+                el.find('.unit').text('kbps');
+            } else {
+                el.find('.value').text(Math.round(val/1024/1024));
+                el.find('.unit').text('mbps');
+            }
+        }
+
+        function updateShowData() {
+            $.get('showdata', function(data) {
+                var showInfo = data;
+                if (!showInfo) showInfo = [];
+                var curTime = new Date();
+                for (var i = 0; i < 13; ++i) {
+                    if (showInfo[i]) {
+                        var show = showInfo[i];
+
+                        shows[i].find('.showname').text(show.showName);
+                        shows[i].find('.epiname').text(show.epiKey + ' - ' + show.epiName);
+
+                        if (show.dled) {
+                            shows[i].find('.epidled').show();
+                            shows[i].find('.epitime').hide();
+                        } else {
+                            shows[i].find('.epidled').hide();
+
+                            var airDate = new Date(show.airDate);
+                            var dTimeMin = (airDate - curTime) / 1000 / 60;
+
+                            if (dTimeMin > 0) {
+                                if (dTimeMin > 60) {
+                                    shows[i].find('.epitime').text(Math.ceil(dTimeMin/60) + 'h').show();
+                                } else {
+                                    shows[i].find('.epitime').text(Math.ceil(dTimeMin) + 'm').show();
+                                }
+                            } else {
+                                shows[i].find('.epitime').hide();
+                            }
+                        }
+                    } else {
+                        shows[i].find('.showname').text('');
+                        shows[i].find('.epiname').text('');
+                        shows[i].find('.epidled').hide();
+                        shows[i].find('.epitime').hide();
+                    }
+                }
+            });
+        }
+
+        function updateNetData() {
+            $.get('netdata', function(data) {
+                var netInfo = data;
+
+                var avgPing = 0;
+                var avgDown = 0;
+                var avgUp = 0;
+                for (var i = 0; i < 5; ++i) {
+                    avgPing += netInfo.pings[i];
+                    avgDown += netInfo.downS[i];
+                    avgUp += netInfo.upS[i];
+                }
+                avgPing /= 5;
+                avgDown /= 5;
+                avgUp /= 5;
+
+                setTimeInfo($('#ping'), avgPing);
+                setBandInfo($('#downSpeed'), avgDown);
+                setBandInfo($('#upSpeed'), avgUp);
+
+                // Update Charts
+                var curTs = (new Date()).getTime();
+
+                var pingData = [['ts', 'ms']];
+                for (var i = 0; i < 14; ++i) {
+                    pingData.push([curTs-i*2000, netInfo.pings[i]]);
+                }
+                pingChart.draw(google.visualization.arrayToDataTable(pingData), pingChartOpts);
+
+                var downData = [['ts', 'ms']];
+                for (var i = 0; i < 14; ++i) {
+                    downData.push([curTs-i*2000, netInfo.downS[i]]);
+                }
+                downChart.draw(google.visualization.arrayToDataTable(downData), pingChartOpts);
+
+                var upData = [['ts', 'ms']];
+                for (var i = 0; i < 14; ++i) {
+                    upData.push([curTs-i*2000, netInfo.upS[i]]);
+                }
+                upChart.draw(google.visualization.arrayToDataTable(upData), pingChartOpts);
+            });
+        }
+
+
+        function begin() {
+            pingChart = new google.visualization.AreaChart($('#pinggraph')[0]);
+            downChart = new google.visualization.AreaChart($('#downgraph')[0]);
+            upChart = new google.visualization.AreaChart($('#upgraph')[0]);
+
+            updateNetData();
+            setInterval(updateNetData, 1000);
+
+            updateShowData();
+            setInterval(updateShowData, 5000);
+        }
+    </script>
+</head>
+
+<body>
+<div id="wrapper">
+    <table border="0" cellspacing="0" cellpadding="0" class="blocks">
+        <tr>
+            <td colspan="3" rowspan="1" class="time">
+                <div class="data curtime"></div>
+                <div class="data curdate">02/20/2014</div>
+            </td>
+            <script type="text/javascript">
+                function updateDt() {
+                    var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                    var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                    var dt = new Date();
+                    var hours = dt.getHours();
+                    var mins = dt.getMinutes();
+                    var ispm = false;
+                    if (hours > 12) {
+                        ispm = true;
+                        hours -= 12;
+                    }
+                    if (hours === 0) {
+                        hours = 12;
+                    }
+                    $('.curtime').text(hours + ':' + minLen(mins,2) + ' ' + (ispm?'PM':'AM'));
+                    $('.curdate').text(days[dt.getDay()] + ', ' + months[dt.getMonth()] + ' ' + dt.getDate() + ', ' + dt.getFullYear());
+                }
+                updateDt();
+                setInterval(updateDt, 100);
+            </script>
+            <td colspan="2" rowspan="4" class="showlist">
+                <table border="0" cellspacing="0" cellpadding="0" class="shows">
+                    <tr class="show baseshowt">
+                        <td>
+                            <div class="showname">The Walking Dead</div>
+                            <div class="epiname">S01E01</div>
+                            <div class="epidled"></div>
+                            <div class="epitime">2h</div>
+                        </td>
+                    </tr>
+                    <script type="text/javascript">
+                        var fshow = $('.baseshowt');
+                        shows.push(fshow);
+                        for (var i = 1; i < 13; ++i) {
+                            var nshow = fshow.clone();
+                            $('.shows').append(nshow);
+                            shows.push(nshow);
+
+                            if (i > 7) {
+                              nshow.addClass('mini');
+                            }
+                        }
+                    </script>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td>
+                <div class="bggraph" id="pinggraph"></div>
+                <div class="title">Ping</div>
+                <div class="data" id="ping">
+                    <span class="value">100</span><span class="subdata"> <span class="unit">ms</span></span>
+                </div>
+            </td>
+            <td>
+                <div class="bggraph" id="downgraph"></div>
+                <div class="title">Bandwidth Down</div>
+                <div class="data" id="downSpeed">
+                    <span class="value">104</span><span class="subdata"> <span class="unit">mbps</span></span>
+                </div>
+                <div class="data outof">out of 175mbps</div>
+            </td>
+            <td>
+                <div class="bggraph" id="upgraph"></div>
+                <div class="title">Bandwidth Up</div>
+                <div class="data" id="upSpeed">
+                    <span class="value">104</span><span class="subdata"> <span class="unit">mbps</span></span>
+                </div>
+                <div class="data outof">out of 30mbps</div>
+            </td>
+        </tr>
+    </table>
+
+</div>
+</body>
+</html>
