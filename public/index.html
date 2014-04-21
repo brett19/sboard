@@ -101,6 +101,13 @@
             height: 32px;
             background-image: url(check.png);
         }
+        .shows .epiday {
+          position: absolute;
+          bottom: 7px;
+          right: 7px;
+          text-align: right;
+          color: #555;
+        }
         .shows .epitime {
             position: absolute;
             top: 12px;
@@ -120,6 +127,16 @@
         .shows tr.mini .epiname {
             display: none;
         }
+        .shows tr.mini .epiday {
+            bottom: 5px;
+            font-size: 10px;
+        }
+        .shows tr.mini .epidled {
+          top: 5px;
+          width: 20px;
+          height: 20px;
+          background-size: 100%;
+        }
 
         .curtime {
             font-size: 100px !important;
@@ -134,6 +151,9 @@
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript">
+        var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
         google.load("visualization", "1", {packages:["corechart"]});
 
         function minLen(num, len) {
@@ -193,9 +213,11 @@
                 for (var i = 0; i < 13; ++i) {
                     if (showInfo[i]) {
                         var show = showInfo[i];
+                        var airDate = new Date(show.airDate);
 
                         shows[i].find('.showname').text(show.showName);
                         shows[i].find('.epiname').text(show.epiKey + ' - ' + show.epiName);
+                        shows[i].find('.epiday').text(days[airDate.getDay()]);
 
                         if (show.dled) {
                             shows[i].find('.epidled').show();
@@ -203,10 +225,8 @@
                         } else {
                             shows[i].find('.epidled').hide();
 
-                            var airDate = new Date(show.airDate);
                             var availDate = new Date(airDate);
                             availDate.setTime(availDate.getTime() + 60*60*1000);
-
                             var dTimeMin = (availDate - curTime) / 1000 / 60;
 
                             if (dTimeMin > 0) {
@@ -299,8 +319,6 @@
             </td>
             <script type="text/javascript">
                 function updateDt() {
-                    var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                    var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
                     var dt = new Date();
                     var hours = dt.getHours();
                     var mins = dt.getMinutes();
@@ -325,6 +343,7 @@
                             <div class="showname">The Walking Dead</div>
                             <div class="epiname">S01E01</div>
                             <div class="epidled"></div>
+                            <div class="epiday">Sunday</div>
                             <div class="epitime">2h</div>
                         </td>
                     </tr>
