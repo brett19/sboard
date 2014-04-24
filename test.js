@@ -69,7 +69,7 @@ function updatePing() {
   });
 }
 updatePing();
-setInterval(updatePing, uSpdSec*1000);
+setInterval(updatePing, uSpdSec*5000);
 
 
 var lastInVal = -1;
@@ -97,12 +97,6 @@ function updateSpeeds() {
 updateSpeeds();
 setInterval(updateSpeeds, uSpdSec*1000);
 
-
-function netInfo(out, done) {
-  out.net =
-
-  done();
-}
 
 
 var app = express();
