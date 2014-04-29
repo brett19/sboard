@@ -77,8 +77,8 @@ var lastOutVal = -1;
 function updateSpeeds() {
   sess.getAll({ oids: ['.1.3.6.1.2.1.2.2.1.10.9', '.1.3.6.1.2.1.2.2.1.16.9'] }, function(err, bnds) {
     if (!err) {
-      var inOcts = bnds[0].value;
-      var outOcts = bnds[1].value;
+      var inOcts = bnds[0].value * 8; // throughput in mbps
+      var outOcts = bnds[1].value * 8; // throughput in mbps
 
       if (lastInVal >= 0 && lastOutVal >= 0) {
         var deltaIn = inOcts - lastInVal;
