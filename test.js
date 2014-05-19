@@ -10,6 +10,10 @@ var sess = new snmp.Session({ host: '192.168.7.1', community: 'public' });
 
 function showInfo(done) {
   request('http://192.168.7.10/tvr/data.xml', function (error, response, body) {
+    if (!body) {
+      return done(new Error('bad data'), null);
+    }
+
     parseXml(body, function (err, result) {
 
       var showData = [];
