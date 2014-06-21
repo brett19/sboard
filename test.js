@@ -14,6 +14,8 @@ function showInfo(done) {
       return done(new Error('bad data'), null);
     }
 
+    body = body.replace(/&#x([0-9][0-9][0-9][0-9])[^;]/gi, '&#$1;');
+
     parseXml(body, function (err, result) {
       if (err) {
         return done(new Error('bad xml'), null);
