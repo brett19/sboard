@@ -15,6 +15,9 @@ function showInfo(done) {
     }
 
     parseXml(body, function (err, result) {
+      if (err) {
+        return done(new Error('bad xml'), null);
+      }
 
       var showData = [];
 
